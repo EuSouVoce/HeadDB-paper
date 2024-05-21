@@ -6,16 +6,21 @@
 
     <groupId>tsp.headdb</groupId>
     <artifactId>HeadDB</artifactId>
-    <version>5.0.0-rc.11</version>
+    <version>5.1.0</version>
     <packaging>jar</packaging>
 
     <name>HeadDB</name>
     <description>Database with thousands of heads</description>
-
+    <pluginRepositories>
+        <pluginRepository>
+            <id>bytecode.space</id>
+            <url>https://repo.bytecode.space/repository/maven-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <build.author>TheSilentPro (Silent)</build.author>
         <maven.build.timestamp.format>dd-MM-yyyy HH:mm:ss</maven.build.timestamp.format>
         <build.timestamp>${maven.build.timestamp}</build.timestamp>
@@ -51,31 +56,37 @@
     </repositories>
 
     <dependencies>
-        <!-- Hard Dependencies (Provided) -->
         <dependency>
+            <groupId>ca.bkaw</groupId>
+            <artifactId>paper-nms</artifactId>
+            <version>1.20.6-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Hard Dependencies (Provided) -->
+<!--         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.20.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
+ -->        <dependency>
             <groupId>com.mojang</groupId>
             <artifactId>authlib</artifactId>
             <version>4.0.43</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
+<!--         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
             <scope>provided</scope>
         </dependency>
-
+ -->
         <!-- Hard Dependencies (Shaded) -->
         <dependency>
-            <groupId>com.github.TheSilentPro</groupId>
+            <groupId>tsp.nexuslib</groupId>
             <artifactId>NexusLib</artifactId>
-            <version>45b4813899</version>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.TheSilentPro</groupId>
@@ -85,7 +96,7 @@
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>1.9.2-SNAPSHOT</version>
+            <version>1.9.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.github.TheSilentPro</groupId>
@@ -98,7 +109,7 @@
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
-            <version>1.7</version>
+            <version>1.7.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -120,8 +131,13 @@
         </resources>
 
         <plugins>
-            <!-- Compiler -->
             <plugin>
+                <groupId>ca.bkaw</groupId>
+                <artifactId>paper-nms-maven-plugin</artifactId>
+                <version>1.4.4</version>
+            </plugin>
+            <!-- Compiler -->
+            <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
@@ -129,13 +145,25 @@
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
+            </plugin> -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <paperweight-mappings-namespace>mojang</paperweight-mappings-namespace>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
-
             <!-- Shade -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.5.3</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -169,7 +197,7 @@
             </plugin>
 
             <!-- Javadoc -->
-            <plugin>
+            <!-- <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.1</version>
@@ -193,7 +221,7 @@
                         </additionalDependency>
                     </additionalDependencies>
                 </configuration>
-            </plugin>
+            </plugin> -->
         </plugins>
     </build>
 

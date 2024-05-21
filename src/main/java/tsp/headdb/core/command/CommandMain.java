@@ -1,6 +1,8 @@
 package tsp.headdb.core.command;
 
 import net.wesjd.anvilgui.AnvilGUI;
+import net.wesjd.anvilgui.AnvilGUI.ResponseAction;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -28,126 +30,135 @@ import java.util.stream.Collectors;
 public class CommandMain extends HeadDBCommand implements CommandExecutor, TabCompleter {
 
     public CommandMain() {
-        super(
-                "headdb",
-                "headdb.command.open",
-                HeadDB.getInstance().getCommandManager().getCommandsMap().values().stream().map(HeadDBCommand::getName).collect(Collectors.toList())
-        );
+        super("headdb", "headdb.command.open", HeadDB.getInstance().getCommandManager().getCommandsMap().values().stream()
+                .map(HeadDBCommand::getName).collect(Collectors.toList()));
     }
 
     @Override
     @ParametersAreNonnullByDefault
-    public void handle(CommandSender sender, String[] args) {
+    public void handle(final CommandSender sender, final String[] args) {
         if (args.length == 0) {
-            if (!(sender instanceof Player player)) {
-                getLocalization().sendConsoleMessage("noConsole");
+            if (!(sender instanceof final Player player)) {
+                this.getLocalization().sendConsoleMessage("noConsole");
                 return;
             }
 
-            if (!player.hasPermission(getPermission())) {
-                getLocalization().sendMessage(sender, "noPermission");
+            if (!player.hasPermission(this.getPermission())) {
+                this.getLocalization().sendMessage(sender, "noPermission");
                 return;
             }
-            getLocalization().sendMessage(player.getUniqueId(), "openDatabase");
+            this.getLocalization().sendMessage(player.getUniqueId(), "openDatabase");
 
-            Pane pane = new Pane(6, Utils.translateTitle(getLocalization().getMessage(player.getUniqueId(), "menu.main.title").orElse("&cHeadDB &7(" + HeadAPI.getTotalHeads() + ")"), HeadAPI.getTotalHeads(), "Main"));
+            final Pane pane = new Pane(6, Utils.translateTitle(this.getLocalization().getMessage(player.getUniqueId(), "menu.main.title")
+                    .orElse("&cHeadDB &7(" + HeadAPI.getTotalHeads() + ")"), HeadAPI.getTotalHeads(), "Main"));
             // Set category buttons
-            for (Category category : Category.VALUES) {
-                pane.setButton(getInstance().getConfig().getInt("gui.main.category." + category.getName(), category.getDefaultSlot()), new Button(category.getItem(player.getUniqueId()), e -> {
-                    e.setCancelled(true);
-                    if (e.isLeftClick()) {
-                        Bukkit.dispatchCommand(e.getWhoClicked(), "hdb open " + category.getName());
-                    } else if (e.isRightClick()) {
-                        new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-                            try {
-                                int page = Integer.parseInt(stateSnapshot.getText());
-                                // to be replaced with own version of anvil-gui
-                                List<Head> heads = HeadAPI.getHeads(category);
-                                PagedPane main = Utils.createPaged(player, Utils.translateTitle(getLocalization().getMessage(player.getUniqueId(), "menu.category.name").orElse(category.getName()), heads.size(), category.getName()));
-                                Utils.addHeads(player, category, main, heads);
-                                main.selectPage(page);
-                                main.reRender();
-                                return Arrays.asList(AnvilGUI.ResponseAction.openInventory(main.getInventory()));
-                            } catch (NumberFormatException nfe) {
-                                return Arrays.asList(AnvilGUI.ResponseAction.replaceInputText("Invalid number!"));
+            for (final Category category : Category.VALUES) {
+                pane.setButton(this.getInstance().getConfig().getInt("gui.main.category." + category.getName(), category.getDefaultSlot()),
+                        new Button(category.getItem(player.getUniqueId()), e -> {
+                            e.setCancelled(true);
+                            if (e.isLeftClick()) {
+                                Bukkit.dispatchCommand(e.getWhoClicked(), "hdb open " + category.getName());
+                            } else if (e.isRightClick()) {
+                                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+                                    try {
+                                        final int page = Integer.parseInt(stateSnapshot.getText());
+                                        // to be replaced with own version of anvil-gui
+                                        final List<Head> heads = HeadAPI.getHeads(category);
+                                        final PagedPane main = Utils.createPaged(player,
+                                                Utils.translateTitle(this.getLocalization()
+                                                        .getMessage(player.getUniqueId(), "menu.category.name").orElse(category.getName()),
+                                                        heads.size(), category.getName()));
+                                        Utils.addHeads(player, category, main, heads);
+                                        main.selectPage(page);
+                                        main.reRender();
+                                        return Arrays.asList(AnvilGUI.ResponseAction.openInventory(main.getInventory()));
+                                    } catch (final NumberFormatException nfe) {
+                                        return Arrays.asList(AnvilGUI.ResponseAction.replaceInputText("Invalid number!"));
+                                    }
+                                }).text("Query")
+                                        .title(StringUtils.colorize(this.getLocalization()
+                                                .getMessage(player.getUniqueId(), "menu.main.category.page.name").orElse("Enter page")))
+                                        .plugin(this.getInstance()).open(player);
                             }
-                        })
-                        .text("Query")
-                        .title(StringUtils.colorize(getLocalization().getMessage(player.getUniqueId(), "menu.main.category.page.name").orElse("Enter page")))
-                        .plugin(getInstance())
-                        .open(player);
-                    }
-                }));
+                        }));
             }
 
             // Set meta buttons
             // favorites
-            pane.setButton(getInstance().getConfig().getInt("gui.main.meta.favorites.slot"), new Button(Utils.getItemFromConfig("gui.main.meta.favorites.item", Material.BOOK), e -> {
-                e.setCancelled(true);
-                if (!player.hasPermission("headdb.favorites")) {
-                    HeadDB.getInstance().getLocalization().sendMessage(player, "noAccessFavorites");
-                    return;
-                }
+            pane.setButton(this.getInstance().getConfig().getInt("gui.main.meta.favorites.slot"),
+                    new Button(Utils.getItemFromConfig("gui.main.meta.favorites.item", Material.BOOK), e -> {
+                        e.setCancelled(true);
+                        if (!player.hasPermission("headdb.favorites")) {
+                            HeadDB.getInstance().getLocalization().sendMessage(player, "noAccessFavorites");
+                            return;
+                        }
 
-                Utils.openFavoritesMenu(player);
-            }));
+                        Utils.openFavoritesMenu(player);
+                    }));
 
             // search
-            pane.setButton(getInstance().getConfig().getInt("gui.main.meta.search.slot"), new Button(Utils.getItemFromConfig("gui.main.meta.search.item", Material.DARK_OAK_SIGN), e -> {
-                e.setCancelled(true);
-                new AnvilGUI.Builder()
-                        .onClick((slot, stateSnapshot) -> {
+            pane.setButton(this.getInstance().getConfig().getInt("gui.main.meta.search.slot"),
+                    new Button(Utils.getItemFromConfig("gui.main.meta.search.item", Material.DARK_OAK_SIGN), e -> {
+                        e.setCancelled(true);
+                        new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
                             // Copied from CommandSearch
-                            List<Head> heads = new ArrayList<>();
-                            List<Head> headList = HeadAPI.getHeads();
+                            final List<Head> heads = new ArrayList<>();
+                            final List<Head> headList = HeadAPI.getHeads();
                             if (stateSnapshot.getText().length() > 3) {
                                 if (stateSnapshot.getText().startsWith("id:")) {
                                     try {
                                         HeadAPI.getHeadById(Integer.parseInt(stateSnapshot.getText().substring(3))).ifPresent(heads::add);
-                                    } catch (NumberFormatException ignored) {
+                                    } catch (final NumberFormatException ignored) {
                                     }
                                 } else if (stateSnapshot.getText().startsWith("tg:")) {
-                                    heads.addAll(headList.stream().filter(head -> Utils.matches(head.getTags(), stateSnapshot.getText().substring(3))).toList());
+                                    heads.addAll(headList.stream()
+                                            .filter(head -> Utils.matches(head.getTags(), stateSnapshot.getText().substring(3))).toList());
                                 } else {
                                     // no query prefix
-                                    heads.addAll(headList.stream().filter(head -> Utils.matches(head.getName(), stateSnapshot.getText())).toList());
+                                    heads.addAll(headList.stream().filter(head -> Utils.matches(head.getName(), stateSnapshot.getText()))
+                                            .toList());
                                 }
                             } else {
                                 // query is <=3, no point in looking for prefixes
-                                heads.addAll(headList.stream().filter(head -> Utils.matches(head.getName(), stateSnapshot.getText())).toList());
+                                heads.addAll(
+                                        headList.stream().filter(head -> Utils.matches(head.getName(), stateSnapshot.getText())).toList());
                             }
 
-                            PagedPane main = Utils.createPaged(player, Utils.translateTitle(getLocalization().getMessage(player.getUniqueId(), "menu.search.name").orElse("&cHeadDB - &eSearch Results"), heads.size(), "None", stateSnapshot.getText()));
+                            final PagedPane main = Utils.createPaged(player,
+                                    Utils.translateTitle(this.getLocalization().getMessage(player.getUniqueId(), "menu.search.name")
+                                            .orElse("&cHeadDB - &eSearch Results"), heads.size(), "None", stateSnapshot.getText()));
                             Utils.addHeads(player, null, main, heads);
                             main.reRender();
-                            return AnvilGUI.Response.openInventory(main.getInventory());
-                        })
-                        .title(StringUtils.colorize(getLocalization().getMessage(player.getUniqueId(), "menu.main.search.name").orElse("Search")))
-                        .text("Query")
-                        .plugin(getInstance())
-                        .open(player);
-            }));
+                            return Arrays.asList(ResponseAction.openInventory(main.getInventory()));
+
+                        }).title(StringUtils
+                                .colorize(this.getLocalization().getMessage(player.getUniqueId(), "menu.main.search.name").orElse("Search")))
+                                .text("Query").plugin(this.getInstance()).open(player);
+                    }));
 
             // local
-            if (getInstance().getConfig().getBoolean("localHeads")) {
-                pane.setButton(getInstance().getConfig().getInt("gui.main.meta.local.slot"), new Button(Utils.getItemFromConfig("gui.main.meta.local.item", Material.COMPASS), e -> {
-                    Set<LocalHead> localHeads = HeadAPI.getLocalHeads();
-                    PagedPane localPane = Utils.createPaged(player, Utils.translateTitle(getLocalization().getMessage(player.getUniqueId(), "menu.main.local.name").orElse("Local Heads"), localHeads.size(), "Local"));
-                    for (LocalHead head : localHeads) {
-                        localPane.addButton(new Button(head.getItem(), le -> {
-                            if (le.isLeftClick()) {
-                                ItemStack localItem = head.getItem();
-                                if (le.isShiftClick()) {
-                                    localItem.setAmount(64);
-                                }
+            if (this.getInstance().getConfig().getBoolean("localHeads")) {
+                pane.setButton(this.getInstance().getConfig().getInt("gui.main.meta.local.slot"),
+                        new Button(Utils.getItemFromConfig("gui.main.meta.local.item", Material.COMPASS), e -> {
+                            final Set<LocalHead> localHeads = HeadAPI.getLocalHeads();
+                            final PagedPane localPane = Utils.createPaged(player, Utils.translateTitle(
+                                    this.getLocalization().getMessage(player.getUniqueId(), "menu.main.local.name").orElse("Local Heads"),
+                                    localHeads.size(), "Local"));
+                            for (final LocalHead head : localHeads) {
+                                localPane.addButton(new Button(head.getItem(), le -> {
+                                    if (le.isLeftClick()) {
+                                        final ItemStack localItem = head.getItem();
+                                        if (le.isShiftClick()) {
+                                            localItem.setAmount(64);
+                                        }
 
-                                player.getInventory().addItem(localItem);
+                                        player.getInventory().addItem(localItem);
+                                    }
+                                }));
                             }
-                        }));
-                    }
 
-                    localPane.open(player);
-                }));
+                            localPane.open(player);
+                        }));
             }
 
             // Fill
@@ -157,31 +168,31 @@ public class CommandMain extends HeadDBCommand implements CommandExecutor, TabCo
             return;
         }
 
-        getInstance().getCommandManager().getCommand(args[0]).ifPresentOrElse(command -> {
-            if (sender instanceof Player player && !player.hasPermission(command.getPermission())) {
-                getLocalization().sendMessage(player.getUniqueId(), "noPermission");
+        this.getInstance().getCommandManager().getCommand(args[0]).ifPresentOrElse(command -> {
+            if (sender instanceof final Player player && !player.hasPermission(command.getPermission())) {
+                this.getLocalization().sendMessage(player.getUniqueId(), "noPermission");
                 return;
             }
 
             command.handle(sender, args);
-        }, () -> getLocalization().sendMessage(sender, "invalidSubCommand"));
+        }, () -> this.getLocalization().sendMessage(sender, "invalidSubCommand"));
     }
 
     @Override
     @ParametersAreNonnullByDefault
-    public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
-        handle(sender, args);
+    public boolean onCommand(final CommandSender sender, final Command command, final String s, final String[] args) {
+        this.handle(sender, args);
         return true;
     }
 
     @Nullable
     @Override
     @ParametersAreNonnullByDefault
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
-            return new ArrayList<>(getCompletions());
+            return new ArrayList<>(this.getCompletions());
         } else {
-            Optional<SubCommand> sub = getInstance().getCommandManager().getCommand(args[0]);
+            final Optional<SubCommand> sub = this.getInstance().getCommandManager().getCommand(args[0]);
             if (sub.isPresent()) {
                 return new ArrayList<>(sub.get().getCompletions());
             }
